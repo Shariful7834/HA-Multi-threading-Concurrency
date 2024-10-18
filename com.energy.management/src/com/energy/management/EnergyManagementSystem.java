@@ -7,13 +7,19 @@ public class EnergyManagementSystem {
         DataSimulator dataSimulator = new DataSimulator(logManager);
         UserInterface userInterface = new UserInterface(logManager);
 
-        // Initialize logs
-        logManager.initializeLogs();
+        try {
+            // Initialize logs
+            logManager.initializeLogs();
 
-        // Simulate data exchange
-        dataSimulator.simulateDataExchange();
+            // Simulate data exchange
+            dataSimulator.simulateDataExchange();
 
-        // User interaction
-        userInterface.start();
+            // User interaction
+            userInterface.start();
+
+        } catch (CustomException e) {
+            System.err.println("An error occurred in the Energy Management System: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

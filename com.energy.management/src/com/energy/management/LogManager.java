@@ -7,11 +7,11 @@ import java.time.format.DateTimeFormatter;
 
 public class LogManager {
 
-    private Path logsDir;
-    private Path chargingStationsDir;
-    private Path energySourcesDir;
-    private Path systemLogsDir;
-    private DateTimeFormatter dateFormatter;
+    public Path logsDir;
+    public Path chargingStationsDir;
+    public Path energySourcesDir;
+    public Path systemLogsDir;
+    public DateTimeFormatter dateFormatter;
 
     public LogManager() {
         logsDir = Paths.get("logs");
@@ -22,7 +22,7 @@ public class LogManager {
     }
 
     // Initialize directories and log files
-    public void initializeLogs() {
+    public void initializeLogs() throws CustomException {
         try {
             // Create directories if they don't exist
             Files.createDirectories(chargingStationsDir);
@@ -33,38 +33,52 @@ public class LogManager {
             createDailyLogFiles();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new CustomException("Failed to initialize logs.", e); // Chaining Exceptions
         }
     }
 
     // Create log files for today
-    public void createDailyLogFiles() throws IOException {
-        LocalDate currentDate = LocalDate.now();
-        String dateString = currentDate.format(dateFormatter);
+    public void createDailyLogFiles() throws CustomException {
+        try {
+            LocalDate currentDate = LocalDate.now();
+            String dateString = currentDate.format(dateFormatter);
 
-        // For demonstration, we'll create logs for one station and one source
-        createLogFile(chargingStationsDir, "station1_" + dateString + ".log");
-        createLogFile(energySourcesDir, "source1_" + dateString + ".log");
-        createLogFile(systemLogsDir, "system_" + dateString + ".log");
-    }
-
-    // Helper method to create a log file
-    private void createLogFile(Path directory, String fileName) throws IOException {
-        Path logFile = directory.resolve(fileName);
-        if (!Files.exists(logFile)) {
-            Files.createFile(logFile);
+            // For demonstration, we'll create logs for one station and one source
+            createLogFile(chargingStationsDir, "station1_" + dateString + ".log");
+            createLogFile(energySourcesDir, "source1_" + dateString + ".log");
+            createLogFile(systemLogsDir, "system_" + dateString + ".log");
+        } catch (CustomException e) {
+            throw new CustomException("Failed to create daily log files.", e); // Chaining Exceptions
         }
     }
 
-    // Write data to a log file
-    public void writeLog(Path logFile, String message) throws IOException {
+    // Helper method to create a log file
+    private void createLogFile(Path directory, String fileName) throws CustomException {
+        Path logFile = directory.resolve(fileName);
+        try {
+            if (!Files.exists(logFile)) {
+                Files.createFile(logFile);
+            }
+        } catch (IOException e) {
+            throw new CustomException("Failed to create log file: " + logFile, e); // Chaining Exceptions
+        }
+    }
+
+    // Write data to a log file ---- multiple handling 
+    
+    public void writeLog(Path logFile, String message) throws CustomException {
+        // Resource Management using try-with-resources
         try (BufferedWriter writer = Files.newBufferedWriter(logFile, StandardOpenOption.APPEND)) {
-            String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String timestamp = java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             writer.write("[" + timestamp + "] " + message);
             writer.newLine();
+        } catch (AccessDeniedException e) {
+            throw new CustomException("Access denied when writing to log file: " + logFile, e); // Chaining Exceptions
+        } catch (NoSuchFileException e) {
+            throw new CustomException("Log file not found: " + logFile, e); // Chaining Exceptions
         } catch (IOException e) {
-            System.err.println("Failed to write to log file: " + e.getMessage());
-            throw e;
+            throw new CustomException("Failed to write to log file: " + logFile, e); // Chaining Exceptions
         }
     }
 
@@ -88,6 +102,4 @@ public class LogManager {
     public Path getLogsDir() {
         return logsDir;
     }
-
-    // Other methods (e.g., archiveLogFile) can be added if needed
 }

@@ -14,26 +14,32 @@ public class UserInterface {
         this.logManager = logManager;
     }
 
-    public void start() {
-        Scanner scanner = new Scanner(System.in);
+    public void start() throws CustomException {
         System.out.println("Welcome to the Energy Management System.");
         System.out.println("Enter 'exit' to quit.");
 
-        while (true) {
-            System.out.println("\nEnter equipment name or date (YYYY-MM-DD) to view logs:");
-            String userInput = scanner.nextLine();
+        try (Scanner scanner = new Scanner(System.in)) { // Resource Management
+            while (true) {
+                System.out.println("\nEnter equipment name or date (YYYY-MM-DD) to view logs:");
+                String userInput = scanner.nextLine();
 
-            if ("exit".equalsIgnoreCase(userInput)) {
-                break;
+                if ("exit".equalsIgnoreCase(userInput)) {
+                    break;
+                }
+
+                try {
+                    searchAndDisplayLogs(userInput);
+                } catch (CustomException e) {
+                    System.err.println("An error occurred: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
-
-            searchAndDisplayLogs(userInput);
+        } catch (Exception e) {
+            throw new CustomException("An unexpected error occurred in the user interface.", e); // Chaining Exceptions
         }
-
-        scanner.close();
     }
 
-    public void searchAndDisplayLogs(String userInput) {
+    public void searchAndDisplayLogs(String userInput) throws CustomException {
         boolean isDate = userInput.matches("\\d{4}-\\d{2}-\\d{2}");
         String patternString;
 
@@ -67,14 +73,18 @@ public class UserInterface {
                 }
             }
 
+        } catch (NoSuchFileException e) {
+            throw new CustomException("Log directory not found.", e); // Chaining Exceptions
+        } catch (AccessDeniedException e) {
+            throw new CustomException("Access denied to log directory.", e); // Chaining Exceptions
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new CustomException("An I/O error occurred while searching logs.", e); // Chaining Exceptions
         }
     }
 
-    public void displayFileContent(Path file) {
+    public void displayFileContent(Path file) throws CustomException {
         System.out.println("Content of " + file.getFileName() + ":");
-        try (BufferedReader reader = Files.newBufferedReader(file)) {
+        try (BufferedReader reader = Files.newBufferedReader(file)) { // Resource Management
             String line;
             double totalEnergy = 0;
             int totalVehicles = 0;
@@ -105,8 +115,12 @@ public class UserInterface {
             }
 
             System.out.println(); // Add an empty line after the content
+        } catch (NoSuchFileException e) {
+            throw new CustomException("Log file not found: " + file.getFileName(), e); // Chaining Exceptions
+        } catch (AccessDeniedException e) {
+            throw new CustomException("Access denied to log file: " + file.getFileName(), e); // Chaining Exceptions
         } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
+            throw new CustomException("An error occurred while reading the file: " + file.getFileName(), e); // Chaining Exceptions
         }
     }
 }
