@@ -69,7 +69,7 @@ public class UserInterface {
             } else {
                 for (Path file : matchingFiles) {
                     System.out.println("\nFound log file: " + file);
-                    displayFileContent(file);
+//                    displayFileContent(file);
                 }
             }
 
@@ -82,45 +82,5 @@ public class UserInterface {
         }
     }
 
-    public void displayFileContent(Path file) throws CustomException {
-        System.out.println("Content of " + file.getFileName() + ":");
-        try (BufferedReader reader = Files.newBufferedReader(file)) { // Resource Management
-            String line;
-            double totalEnergy = 0;
-            int totalVehicles = 0;
-            int lineCount = 0;
-
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-                // Parse the line to extract data
-                if (file.getParent().getFileName().toString().equals("charging_stations")) {
-                    Pattern energyPattern = Pattern.compile("Total Energy Consumed: ([\\d\\.]+) kWh");
-                    Matcher energyMatcher = energyPattern.matcher(line);
-                    if (energyMatcher.find()) {
-                        totalEnergy += Double.parseDouble(energyMatcher.group(1));
-                    }
-                    Pattern vehiclesPattern = Pattern.compile("Vehicles Charged: (\\d+)");
-                    Matcher vehiclesMatcher = vehiclesPattern.matcher(line);
-                    if (vehiclesMatcher.find()) {
-                        totalVehicles += Integer.parseInt(vehiclesMatcher.group(1));
-                    }
-                }
-                lineCount++;
-            }
-
-            // Display summary
-            if (file.getParent().getFileName().toString().equals("charging_stations") && lineCount > 0) {
-                System.out.printf("Summary: Total Vehicles Charged: %d, Total Energy Consumed: %.2f kWh%n",
-                        totalVehicles, totalEnergy);
-            }
-
-            System.out.println(); // Add an empty line after the content
-        } catch (NoSuchFileException e) {
-            throw new CustomException("Log file not found: " + file.getFileName(), e); // Chaining Exceptions
-        } catch (AccessDeniedException e) {
-            throw new CustomException("Access denied to log file: " + file.getFileName(), e); // Chaining Exceptions
-        } catch (IOException e) {
-            throw new CustomException("An error occurred while reading the file: " + file.getFileName(), e); // Chaining Exceptions
-        }
-    }
+    // Rest of the class...
 }

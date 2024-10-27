@@ -1,16 +1,27 @@
 package com.energy.management;
 
-public class EnergySource {
+public class EnergySource implements Runnable {
+    private final Battery battery;
+    private final int chargeAmount;
+    private final int interval; // 
 
-    private String name;
-
-    public EnergySource(String name) {
-        this.name = name;
+    public EnergySource(Battery battery, int chargeAmount, int interval) {
+        this.battery = battery;
+        this.chargeAmount = chargeAmount;
+        this.interval = interval;
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public void run() {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                battery.charge(chargeAmount);
+                Thread.sleep(interval);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); 
+        } catch (CustomException e) {
+            e.printStackTrace();
+        }
     }
-
-    // Additional methods and properties
 }
